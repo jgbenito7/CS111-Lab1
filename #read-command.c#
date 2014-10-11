@@ -116,14 +116,14 @@ make_command_stream (int (*get_next_byte) (void *),
 	wordSize=0;
 	stream->root = checked_malloc(sizeof(struct node));
 	stream->root = head;
-	//printf(stream->root->word);
+	
 	return stream;
 }
 
 command_t
 read_command_stream (command_stream_t s)
 {
-  printf(s->root->word);
+  
   return 0;
 }
 
