@@ -26,11 +26,10 @@
 #include <stdarg.h>
 #include <ctype.h>
 
-/* FIXME: You may need to add #include directives, macro definitions,
-   static function definitions, etc.  */
+//define bool
+typedef int bool;
+enum { false, true };
 
-/* FIXME: Define the type 'struct command_stream' here.  This should
-   complete the incomplete type declaration in command.h.  */
 
 struct command_stream
 {
@@ -40,10 +39,63 @@ struct command_stream
 
 struct node
 {
+  int flag;
   char* word;  
   struct node *next;
   
 };
+
+int isOperator(char c)
+{
+  switch(c)
+    {
+    case '|':
+      {
+	return 1;
+	break;
+      }
+    case '(':
+      {
+	return 1;
+	break;
+      }
+    case ')':
+      {
+	return 1;
+	break;
+      }
+    case ':':
+      {
+	return 1;
+	break;
+      }
+    case '<':
+      {
+	return 1;
+	break;
+      }
+    case '>':
+      {
+	return 1;
+	break;
+      }
+    default:
+      return 0;
+    }
+}
+
+int isalphaNum(char c)
+{
+  if(c>=48 && c<=57)
+    return 1;
+  if(c>=65 && c<=90)
+    return 1;
+  if(c>=97 && c<=122)
+    return 1;
+  if(c == '!' || c == '%' || c == '+' || c == ',' || c == '-' || c == '.' || c == '/' || c == '@' || c == '^' || c == '_')
+    return 1;
+  return 0;
+}
 
 command_stream_t
 make_command_stream (int (*get_next_byte) (void *),
@@ -60,30 +112,51 @@ make_command_stream (int (*get_next_byte) (void *),
     4) Take diff of output from 3 and 2
 
 */
+  enum { COMMAND,
+	 OPERATOR,
+	 COMPOUND,
+	 NEWLINE_SEMICOLON
+  };
   command_stream_t stream = (command_stream_t)checked_malloc(sizeof(struct command_stream));
   struct node *head = checked_malloc(sizeof(struct node));
   struct node *current = checked_malloc(sizeof(struct node));
   current = head;
-  size_t read = 0;
   int current_byte;
   //char* buffer = (char*) checked_malloc(bufferSize);
   char* str = (char*)checked_malloc(sizeof(char));
   int i=0;
   int wordSize=0;
   char current_char;
-  
+  int line = 1;
   while((current_byte = get_next_byte(get_next_byte_argument))!= EOF){
-    
     current_char = current_byte;
-    if(current_char!=32 && current_char!=10)
+
+    if(isOperator(current_char))
+      {
+	wordSize++;
+	current->word = (char*)checked_malloc(wordSize*sizeof(char));
+	(current->word)[0]=current_char;
+	current->flag = OPERATOR;
+	wordSize=0;
+	//printf(current->word);
+	//printf("%i", current->flag);
+	current = current->next;
+	current = malloc(sizeof(struct node));
+	continue;
+	
+      }
+
+    if(isalphaNum(current_char) || current_char==' ')
       {
 	wordSize++;
 	str = (char*)realloc(str,wordSize*sizeof(char));
 	str[wordSize-1] = current_byte;
-	
+	//printf(str);
+	//printf("\n");
       }
     
-    else
+     
+    if((strncmp(str,"if",2)==0) || (strncmp(str,"while",5)==0) || (strncmp(str,"until",2)==0))
       {
 	current->word = (char*)checked_malloc(wordSize*sizeof(char));
 	int x = 0;
@@ -91,39 +164,56 @@ make_command_stream (int (*get_next_byte) (void *),
 	  {
 	    (current->word)[x] = str[x];
 	  }
-	
-	free(str);
-	str = (char*)checked_malloc(sizeof(char));
+	current->flag = COMPOUND;
 	current = current->next;
 	current = malloc(sizeof(struct node));
-	wordSize=0;
-       }
-    i++;
-   
-  }
-
-	current->word = (char*)checked_malloc(wordSize*sizeof(char));
-	int x;
-       	for(x=0; x<wordSize; x++)
+	free(str);
+	wordSize = 0;
+	continue;
+      }
+    
+    if(current_char=='\n' || current_char==';')
+      {
+          printf(str);
+	  printf("\n");
+	if(!(str[0]=='\0'))
 	  {
-	    (current->word)[x] = str[x];
+	    current->word = (char*)checked_malloc(wordSize*sizeof(char));
+	    int x = 0;
+	    for(x=0; x<wordSize; x++)
+	      {
+		(current->word)[x] = str[x];
+	      }
+	    current->flag = COMMAND;
+	    //printf(current->word);
+	    current = current->next;
+	    current = malloc(sizeof(struct node));
+	    wordSize = 0;
 	  }
-	
+	wordSize++;
+	current->word = (char*)checked_malloc(wordSize*sizeof(char));
+	 int x = 0;
+	    for(x=0; x<wordSize; x++)
+	      {
+		(current->word)[x] = str[x];
+	      }
+	    current->flag = NEWLINE_SEMICOLON;
+	    current = current->next;
+	    current = malloc(sizeof(struct node));
 	free(str);
-	str = (char*)checked_malloc(sizeof(char));
-	current = current->next;
-	current = malloc(sizeof(struct node));
-	wordSize=0;
-	stream->root = checked_malloc(sizeof(struct node));
-	stream->root = head;
-	//printf(stream->root->word);
+	wordSize = 0;
+	continue;
+      }
+  }
+	
 	return stream;
 }
 
 command_t
 read_command_stream (command_stream_t s)
 {
-  printf(s->root->word);
+  
   return 0;
 }
+
 

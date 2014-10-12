@@ -1,2 +1,1 @@
-#!/bin/bash
-echo "Your mom"
+echo "chickens";
