@@ -42,6 +42,7 @@ struct node
   int flag;
   char* word;  
   struct node *next;
+  // struct node *previous;
   
 };
 
@@ -96,6 +97,25 @@ int isalphaNum(char c)
     return 1;
   return 0;
 }
+void saveToNode(char* str, struct node* current, int flag, int size)
+{
+  current->word = (char*)checked_malloc(size*sizeof(char));
+   int x = 0;
+   for(x=0; x<size; x++)
+     {
+       // printf(str);
+       (current->word)[x] = str[x];
+     }
+   
+   current->flag = flag;
+   printf("Inserted: "); printf(current->word); printf(", ");printf("%i", current->flag);printf("\n");
+   //current->next->previous = current;
+   
+   current->next = checked_malloc(sizeof(struct node)); 
+   //printf("here");
+   current = current->next;
+   
+}
 
 command_stream_t
 make_command_stream (int (*get_next_byte) (void *),
@@ -118,11 +138,11 @@ make_command_stream (int (*get_next_byte) (void *),
 	 NEWLINE_SEMICOLON
   };
   command_stream_t stream = (command_stream_t)checked_malloc(sizeof(struct command_stream));
-  struct node *head = checked_malloc(sizeof(struct node));
-  struct node *current = checked_malloc(sizeof(struct node));
+  struct node *head =(struct node *)checked_malloc(sizeof(struct node));
+  struct node *current;
   current = head;
+  
   int current_byte;
-  //char* buffer = (char*) checked_malloc(bufferSize);
   char* str = (char*)checked_malloc(sizeof(char));
   int i=0;
   int wordSize=0;
@@ -130,83 +150,72 @@ make_command_stream (int (*get_next_byte) (void *),
   int line = 1;
   while((current_byte = get_next_byte(get_next_byte_argument))!= EOF){
     current_char = current_byte;
-
-    if(isOperator(current_char))
+    printf(head->word);
+     if(isOperator(current_char))
       {
 	wordSize++;
-	current->word = (char*)checked_malloc(wordSize*sizeof(char));
-	(current->word)[0]=current_char;
-	current->flag = OPERATOR;
+	str = (char*)realloc(str,wordSize*sizeof(char));
+	str[wordSize-1] = current_byte;
+	saveToNode(str, current, OPERATOR, wordSize);
+	str[0]='\0';
+	memset(str,0,strlen(str));
 	wordSize=0;
-	//printf(current->word);
-	//printf("%i", current->flag);
-	current = current->next;
-	current = malloc(sizeof(struct node));
 	continue;
 	
-      }
+	}
 
+    
     if(isalphaNum(current_char) || current_char==' ')
       {
 	wordSize++;
 	str = (char*)realloc(str,wordSize*sizeof(char));
 	str[wordSize-1] = current_byte;
-	//printf(str);
-	//printf("\n");
       }
     
      
     if((strncmp(str,"if",2)==0) || (strncmp(str,"while",5)==0) || (strncmp(str,"until",2)==0))
       {
-	current->word = (char*)checked_malloc(wordSize*sizeof(char));
-	int x = 0;
-	for(x=0; x<wordSize; x++)
-	  {
-	    (current->word)[x] = str[x];
-	  }
-	current->flag = COMPOUND;
-	current = current->next;
-	current = malloc(sizeof(struct node));
-	free(str);
+	saveToNode(str, current, COMPOUND, wordSize);
+	str[0]='\0';
+	memset(str,0,strlen(str));free(str);
 	wordSize = 0;
 	continue;
       }
     
+    
+    
     if(current_char=='\n' || current_char==';')
       {
-          printf(str);
-	  printf("\n");
-	if(!(str[0]=='\0'))
-	  {
-	    current->word = (char*)checked_malloc(wordSize*sizeof(char));
-	    int x = 0;
-	    for(x=0; x<wordSize; x++)
-	      {
-		(current->word)[x] = str[x];
-	      }
-	    current->flag = COMMAND;
-	    //printf(current->word);
-	    current = current->next;
-	    current = malloc(sizeof(struct node));
-	    wordSize = 0;
+	  if(!(str[0]=='\0'))
+	    { 
+	      saveToNode(str, current, COMMAND, wordSize);
+	       printf(head->word);
+	      str[0]='\0';
+	      memset(str,0,strlen(str));
+	      wordSize = 0;
 	  }
 	wordSize++;
-	current->word = (char*)checked_malloc(wordSize*sizeof(char));
-	 int x = 0;
-	    for(x=0; x<wordSize; x++)
-	      {
-		(current->word)[x] = str[x];
-	      }
-	    current->flag = NEWLINE_SEMICOLON;
-	    current = current->next;
-	    current = malloc(sizeof(struct node));
-	free(str);
+	saveToNode(str, current, NEWLINE_SEMICOLON, wordSize);
+	 printf(head->word);
+	str[0]='\0';
+	memset(str,0,strlen(str));
 	wordSize = 0;
 	continue;
-      }
+	}
   }
-	
-	return stream;
+  printf(head->word);
+  current = head;
+  /*
+  do
+   {
+      printf("node");
+      printf("\n");
+      printf(current->word);
+      printf("\n");
+      current = current->next;
+    }while(current->next != NULL);
+  */
+    return stream;
 }
 
 command_t
