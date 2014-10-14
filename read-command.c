@@ -26,27 +26,17 @@
 #include <stdarg.h>
 #include <ctype.h>
 
-//define bool
-typedef int bool;
-enum { false, true };
+typedef struct command_node *command_node_t;
 
-enum { COMMAND,
-	 OPERATOR,
-	 COMPOUND,
-	 NEWLINE_SEMICOLON
-  };
+struct command_node
+{
+  command_t command;
+  command_node_t next;
+};
 
 struct command_stream
 {
-  //pointer to command pointer
-  struct node* root;
-};
-
-struct node
-{
-  int flag;
-  char* word;  
-  struct node* next;  
+  command_node_t* commands;
 };
 
 int isOperator(char c)
@@ -97,141 +87,137 @@ int isalphaNum(char c)
     return 1;
   if(c>=97 && c<=122)
     return 1;
-  if(c == '!' || c == '%' || c == '+' || c == ',' || c == '-' || c == '.' || c == '/' || c == '@' || c == '^' || c == '_' || c == '=')
+  if(c == '!' || c == '%' || c == '+' || c == ',' || c == '-' || c == '.' || c == '/' || c == '@' || c == '^' || c == '_')
     return 1;
   return 0;
 }
+
+int isSimpleCommand(char* c)
+{
+  int x=0;
+  char cur;
+  cur = c[0];
+  while(cur!='\0')
+    {
+      if(!isalphaNum(c[x]))
+	{
+	  return 0;
+	}
+      cur = c[x+1];
+      x++;
+    }
+  return 1;
+}
+char* parseIntoBlocks(char* c, int *start, int *size)
+{
+  char* str = malloc(sizeof(char));
+  int blockSize = 0;
+  int x = *start;
+  for(x;x<(*size);x++)
+    {
+      blockSize++;
+      str = (char*)realloc(str, blockSize*sizeof(char));
+      str[blockSize-1] = c[x];
+      //printf("current string: ");
+      //printf(str);
+      //printf("\n");
+      if(c[x+1] == '\n' && c[x+2] == '\n')
+	{
+	  blockSize+=2;
+	  *start = *start + blockSize;
+	  return str;
+	}
+    }
+  return '\0';
+  
+}
+/*
 struct node* saveToNode(char* str, struct node* current, int flag, int size)
 {
-  current->word = (char*)checked_malloc(size*sizeof(char));
-   int x = 0;
-   for(x=0; x<size; x++)
-     {
-       (current->word)[x] = str[x];
-     }
-   
-   current->flag = flag;
-   printf("Inserted: "); printf(current->word); printf(", ");printf("%i", current->flag);printf("\n");
-   current->next = malloc(sizeof(struct node)); 
-   current = current->next;
-   return current;
-}
+  return NULL;
+  }*/
 
 command_stream_t
 make_command_stream (int (*get_next_byte) (void *),
 		     void *get_next_byte_argument)
 {
-  //create a command stream
-
-
-  command_stream_t stream = (command_stream_t)checked_malloc(sizeof(struct command_stream));
-  struct node* head;
-  struct node *current;
-  current = (struct node *)checked_malloc(sizeof(struct node));
-  head = current;
-  
+  command_stream_t stream = checked_malloc(sizeof(struct command_stream));
+  command_node_t head = NULL;
+  stream->commands = checked_malloc(sizeof(struct command_node));
+  head = stream->commands;
+  command_node_t current = head;
   int current_byte;
+  char* buffer = (char*)checked_malloc(sizeof(char));
   char* str = (char*)checked_malloc(sizeof(char));
   int wordSize=0;
   char current_char;
   int line = 1;
-  int foundComment = 0;
+  int i=1;
   while((current_byte = get_next_byte(get_next_byte_argument))!= EOF){
     current_char = current_byte;
-     if(current_char == '#')
-       {
-	 foundComment = 1;
-	 continue;
-       }
-    
-     if(isOperator(current_char))
-      {
-	
-	if(!(str[0]=='\0'))
-	    { 
-	      current = saveToNode(str, current, OPERATOR, wordSize);
-	      str[0]='\0';
-	      memset(str,0,strlen(str));
-	      wordSize = 0;
-	  }
-	wordSize++;
-	str = (char*)realloc(str,wordSize*sizeof(char));
-	str[wordSize-1] = current_byte;
-	current = saveToNode(str, current, OPERATOR, wordSize);
-	str[0]='\0';
-	memset(str,0,strlen(str));
-	wordSize=0;
-	continue;
-	
-	}
-    
-       
-    
-    if(isalphaNum(current_char) || current_char==' ')
-      {
-	if(foundComment)
-	  {
-	    continue;
-	  }
-	wordSize++;
-	str = (char*)realloc(str,wordSize*sizeof(char));
-	str[wordSize-1] = current_byte;
-	
-      }
-    
-     
-    if((strncmp(str,"if",2)==0) || (strncmp(str,"while",5)==0) || (strncmp(str,"until",2)==0) || (strncmp(str,"else",4)==0) || (strncmp(str,"done",4)==0))
-      {
-	
-	current = saveToNode(str, current, COMPOUND, wordSize);
-	str[0]='\0';
-	memset(str,0,strlen(str));
-	wordSize = 0;
-	continue;
-      }
-    
-    
-    
-    if(current_char=='\n' || current_char==';')
-      {
-	if(foundComment)
-	  {
-	    foundComment = 0;
-	    continue;
-	  }
-	  if(!(str[0]=='\0'))
-	    { 
-	      current = saveToNode(str, current, COMMAND, wordSize);
-	      str[0]='\0';
-	      memset(str,0,strlen(str));
-	      wordSize = 0;
-	  }
-	wordSize++;
-	current = saveToNode(str, current, NEWLINE_SEMICOLON, wordSize);
-	str[0]='\0';
-	memset(str,0,strlen(str));
-	wordSize = 0;
-	continue;
-	}
+    buffer = (char*)realloc(buffer,i*sizeof(char));
+    buffer[i-1]=current_char;
+    i++;
+
   }
-  
-  current = head;
-  while(current->next != NULL)
-   {
-      printf("Node: ");
-      printf(current->word);
-      printf("\n");
-      current = current->next;
+  int x=0;
+  char* buffer_block = (char*)checked_malloc(i*sizeof(char));
+  int start = 0;
+  int size = i;
+  int wordCount = 0;
+
+  while(buffer_block!='\0')
+    {
+
+      buffer_block = parseIntoBlocks(buffer,&start,&size);
+      
+    }
+  /*
+  for(x=0;x<i;x++)
+    {
+      
+      if(isalphaNum(buffer[x]) || buffer[x]==' ')
+      {
+
+	wordSize++;
+	buffer_block = (char*)realloc(buffer_block,wordSize*sizeof(char));
+	buffer_block[wordSize-1] = buffer[x];
+	
       }
-  stream->root = head;
-   return stream;
+    
+      
+      if((strncmp(buffer_block,"if",2)==0))
+      {
+	printf(buffer_block);
+	printf("\n");
+	int k = x+1;
+	while(isalphaNum(buffer[k]) || buffer[x]==' ' || isOperator(buffer[k]))
+	  {
+	    printf("%i",k);
+	    printf("\n");
+	    wordSize++;
+	    buffer_block = (char*)realloc(buffer_block,wordSize*sizeof(char));
+	    buffer_block[wordSize-1] = buffer[k];
+	    printf(buffer_block);
+	    printf("\n");
+	    if(buffer[k] == 'i' && buffer[k-1] == 'f' && buffer[k-2] == ' ')
+	      {
+	     
+		return 0;
+		break;
+		}
+	    k++;
+	  }
+	 x = x+k;
+	 }
+   
+    }*/
+
+   return 0;
 }
 
 command_t
 read_command_stream (command_stream_t s)
 {
-  
-  return 0;
+  return NULL;
 }
-
-
