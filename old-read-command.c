@@ -30,11 +30,6 @@
 typedef int bool;
 enum { false, true };
 
-enum { COMMAND,
-	 OPERATOR,
-	 COMPOUND,
-	 NEWLINE_SEMICOLON
-  };
 
 struct command_stream
 {
@@ -73,7 +68,6 @@ int isOperator(char c)
 	return 1;
 	break;
       }
-      
     case '<':
       {
 	return 1;
@@ -83,7 +77,7 @@ int isOperator(char c)
       {
 	return 1;
 	break;
-	}
+      }
     default:
       return 0;
     }
@@ -97,7 +91,7 @@ int isalphaNum(char c)
     return 1;
   if(c>=97 && c<=122)
     return 1;
-  if(c == '!' || c == '%' || c == '+' || c == ',' || c == '-' || c == '.' || c == '/' || c == '@' || c == '^' || c == '_' || c == '=')
+  if(c == '!' || c == '%' || c == '+' || c == ',' || c == '-' || c == '.' || c == '/' || c == '@' || c == '^' || c == '_')
     return 1;
   return 0;
 }
@@ -107,6 +101,7 @@ struct node* saveToNode(char* str, struct node* current, int flag, int size)
    int x = 0;
    for(x=0; x<size; x++)
      {
+       // printf(str);
        (current->word)[x] = str[x];
      }
    
@@ -114,7 +109,7 @@ struct node* saveToNode(char* str, struct node* current, int flag, int size)
    printf("Inserted: "); printf(current->word); printf(", ");printf("%i", current->flag);printf("\n");
    current->next = malloc(sizeof(struct node)); 
    current = current->next;
-   return current;
+
 }
 
 command_stream_t
@@ -122,8 +117,21 @@ make_command_stream (int (*get_next_byte) (void *),
 		     void *get_next_byte_argument)
 {
   //create a command stream
+  /*Parses the commmands and stores it in a command stream pick a data structure to store the shit in
 
+     test-t-ok.sh
 
+    1) Generate inputs(shell commands)
+    2) Generate expected output
+    3) Run you program against 1
+    4) Take diff of output from 3 and 2
+
+*/
+   enum { COMMAND,
+	 OPERATOR,
+	 COMPOUND,
+	 NEWLINE_SEMICOLON
+  };
   command_stream_t stream = (command_stream_t)checked_malloc(sizeof(struct command_stream));
   struct node* head;
   struct node *current;
@@ -135,25 +143,12 @@ make_command_stream (int (*get_next_byte) (void *),
   int wordSize=0;
   char current_char;
   int line = 1;
-  int foundComment = 0;
+
   while((current_byte = get_next_byte(get_next_byte_argument))!= EOF){
     current_char = current_byte;
-     if(current_char == '#')
-       {
-	 foundComment = 1;
-	 continue;
-       }
-    
+ 
      if(isOperator(current_char))
       {
-	
-	if(!(str[0]=='\0'))
-	    { 
-	      current = saveToNode(str, current, OPERATOR, wordSize);
-	      str[0]='\0';
-	      memset(str,0,strlen(str));
-	      wordSize = 0;
-	  }
 	wordSize++;
 	str = (char*)realloc(str,wordSize*sizeof(char));
 	str[wordSize-1] = current_byte;
@@ -164,28 +159,21 @@ make_command_stream (int (*get_next_byte) (void *),
 	continue;
 	
 	}
-    
-       
+
     
     if(isalphaNum(current_char) || current_char==' ')
       {
-	if(foundComment)
-	  {
-	    continue;
-	  }
 	wordSize++;
 	str = (char*)realloc(str,wordSize*sizeof(char));
 	str[wordSize-1] = current_byte;
-	
       }
     
      
-    if((strncmp(str,"if",2)==0) || (strncmp(str,"while",5)==0) || (strncmp(str,"until",2)==0) || (strncmp(str,"else",4)==0) || (strncmp(str,"done",4)==0))
+    if((strncmp(str,"if",2)==0) || (strncmp(str,"while",5)==0) || (strncmp(str,"until",2)==0))
       {
-	
 	current = saveToNode(str, current, COMPOUND, wordSize);
 	str[0]='\0';
-	memset(str,0,strlen(str));
+	memset(str,0,strlen(str));free(str);
 	wordSize = 0;
 	continue;
       }
@@ -194,11 +182,6 @@ make_command_stream (int (*get_next_byte) (void *),
     
     if(current_char=='\n' || current_char==';')
       {
-	if(foundComment)
-	  {
-	    foundComment = 0;
-	    continue;
-	  }
 	  if(!(str[0]=='\0'))
 	    { 
 	      current = saveToNode(str, current, COMMAND, wordSize);
@@ -218,13 +201,14 @@ make_command_stream (int (*get_next_byte) (void *),
   current = head;
   while(current->next != NULL)
    {
-      printf("Node: ");
+      printf("node");
+      printf("\n");
       printf(current->word);
       printf("\n");
       current = current->next;
       }
-  stream->root = head;
-   return stream;
+
+   return 0;
 }
 
 command_t
