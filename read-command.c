@@ -725,6 +725,26 @@ char** parseBlock(char* c)
 		  //char* newString = malloc(sizeof(char));
 		  //temp = newString;
 		}
+			   else
+			     {
+			       if(sub_block[j+1] == '\0' && untilCount==0)
+				 {
+				   int index = 0;
+				   commands[whichCommand] = malloc(tempSize*sizeof(char));
+				   for(index=0;index<tempSize;index++)
+				     {
+				       commands[whichCommand][index] = temp[index];
+				     }
+				   printf("A: ");
+				   printf(commands[whichCommand]);
+				   printf("\n");
+				   whichCommand++;
+				   j=j+4;
+				   tempSize = 0;
+				   free(temp);
+				   temp = malloc(sizeof(char));
+				 }
+			     }
 			 }
 	      else if(whichCommand == 1)
 			 {
@@ -951,28 +971,31 @@ make_command_stream (int (*get_next_byte) (void *),
 	     test[index-1] = buffer_block[index-1];
 	     
 	  }
-
+ commands = parseBlock(buffer_block);
   while(buffer_block!='\0')
   {
       //grab a block
     printf("Buffer_Block: ");
     printf(buffer_block);
     printf("\n");
-    // commands = parseBlock(buffer_block);
+   
     //char* buffer_block;
     buffer_block = parseIntoBlocks(buffer,&start,&size);
-    printf("right here");
+    
     printf("\n");
        index = 0;
-       free(test);
+       //free(test);
        test = malloc(sizeof(char));
-       while(buffer_block[index]!='\0')
-	  {
-	    index++;
-	    test = realloc(test,index*sizeof(char));
-	    test[index-1] = buffer_block[index-1];
+       if(buffer_block!='\0')
+	 {
+	   while(buffer_block[index]!='\0')
+	     {
+	       index++;
+	       test = realloc(test,index*sizeof(char));
+	       test[index-1] = buffer_block[index-1];
 	     
-	  }
+	     }
+	 }
     }
 
    return 0;
