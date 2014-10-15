@@ -108,6 +108,7 @@ int isSimpleCommand(char* c)
     }
   return 1;
 }
+
 char* parseIntoBlocks(char* c, int *start, int *size)
 {
   char* str = malloc(sizeof(char));
@@ -118,24 +119,793 @@ char* parseIntoBlocks(char* c, int *start, int *size)
       blockSize++;
       str = (char*)realloc(str, blockSize*sizeof(char));
       str[blockSize-1] = c[x];
-      //printf("current string: ");
-      //printf(str);
+      //printf("%c",str[x]);
       //printf("\n");
       if(c[x+1] == '\n' && c[x+2] == '\n')
 	{
-	  blockSize+=2;
+	  blockSize++;
+	  str = (char*)realloc(str, blockSize*sizeof(char));
+	  str[blockSize-1] = '\0';
+
+	  blockSize+=1;
 	  *start = *start + blockSize;
 	  return str;
 	}
     }
-  return '\0';
+  return '\0'; 
+}
+
+char* findIfBlock(char* c, int k)
+{
+  int subSize = 0;
+  char* sub_block = malloc(sizeof(char));
+  char* error_message = "you fucked up. Quit CS right now";
+  int ifCount = 1;
+  while(c[k]!='\0')
+	    {
+	      subSize++;
+	      sub_block = (char*)realloc(sub_block,subSize*sizeof(char));
+	      sub_block[subSize-1] = c[k];
+	      if(c[k] == 'i' && c[k+1] == 'f' && (c[k+2] == ' ' || c[k+2] == '\n'))
+		 {
+		   ifCount++;
+		 }
+	      if(((c[k] == ' ') || (c[k] == '\n')) && c[k+1] == 'f' && c[k+2] == 'i')
+		 {
+		   ifCount--;
+		   if(ifCount == 0)
+		     {
+		       return sub_block;
+		     }
+		   
+		 }
+	      k++;
+	    }
+  return error_message;
+}
+char* findWhileBlock(char* c, int k)
+{
+  int subSize = 0;
+  char* sub_block = malloc(sizeof(char));
+  char* error_message = "you fucked up. Quit CS right now";
+  int whileCount = 1;
+  while(c[k]!='\0')
+	    {
+	      subSize++;
+	      sub_block = (char*)realloc(sub_block,subSize*sizeof(char));
+	      sub_block[subSize-1] = c[k];
+	      if(c[k] == 'w' && c[k+1] == 'h' && c[k+2] == 'i' && c[k+3] == 'l' && c[k+4] == 'e' && (c[k+5] == ' ' || c[k+5] == '\n'))
+		 {
+		   whileCount++;
+		 }
+	      if(((c[k] == ' ') || (c[k] == '\n')) && c[k+1] == 'd' && c[k+2] == 'o' && c[k+3] == 'n' && c[k+4] == 'e')
+		 {
+		   whileCount--;
+		   if(whileCount == 0)
+		     {
+		       return sub_block;
+		     }
+		   
+		 }
+	      k++;
+	    }
+  return error_message;
+}
+
+char* findUntilBlock(char* c, int k)
+{
+  int subSize = 0;
+  char* sub_block = malloc(sizeof(char));
+  char* error_message = "you fucked up. Quit CS right now";
+  int untilCount = 1;
+  while(c[k]!='\0')
+	    {
+	      subSize++;
+	      sub_block = (char*)realloc(sub_block,subSize*sizeof(char));
+	      sub_block[subSize-1] = c[k];
+	      if(c[k] == 'u' && c[k+1] == 'n' && c[k+2] == 't' && c[k+3] == 'i' && c[k+4] == 'l' && (c[k+5] == ' ' || c[k+5] == '\n'))
+		 {
+		   untilCount++;
+		 }
+	      if(((c[k] == ' ') || (c[k] == '\n')) && c[k+1] == 'd' && c[k+2] == 'o' && c[k+3] == 'n' && c[k+4] == 'e')
+		 {
+		   untilCount--;
+		   if(untilCount == 0)
+		     {
+		       return sub_block;
+		     }
+		   
+		 }
+	      k++;
+	    }
+  return error_message;
+}
+char* commands[3];
+char** parseBlock(char* c)
+{
+  int type;
+  
+  int wordSize = 0;
+  char* buffer_block = malloc(sizeof(char));
+  int flag;
+  int x = 0;
+  char* sub_block;
+  while(c[x]!='\0')
+    {
+  
+	  wordSize++;
+	  buffer_block = (char*)realloc(buffer_block,wordSize*sizeof(char));
+	  buffer_block[wordSize-1] = c[x];
+	
+    
+      
+      if((strncmp(buffer_block,"if",2)==0))
+	{
+	  type = IF_COMMAND;
+	  int ifCount = 1;
+	  int subSize = 0;
+	  int whichCommand = 0;
+	  int k = x+2;
+	  
+
+	  sub_block = findIfBlock(c,k);
+	  printf("Sub block: "); printf(sub_block);printf("\n");
+	  int j = 0;
+	  char* temp = malloc(sizeof(char));
+	  int tempSize = 0;
+	  ifCount = 0;
+	  while(sub_block[j]!='\0')
+	    {
+	      tempSize++;
+	      temp = (char*)realloc(temp,tempSize*sizeof(char));
+	      temp[tempSize-1] = sub_block[j];
+	      //printf("%c",sub_block[j]);
+	      //printf("\n");
+	      if(sub_block[j] == 'i' && sub_block[j+1] == 'f' && (sub_block[j+2] == ' ' || sub_block[j+2] == '\n'))
+		 {
+		   //printf("found if\n");
+		   ifCount++;
+		 }
+	      if(((sub_block[j] == ' ') || (sub_block[j] == '\n')) && sub_block[j+1] == 'f' && sub_block[j+2] == 'i')
+		 {
+
+		   ifCount--;
+		   if(ifCount == 0)
+		     {
+		       tempSize++;
+		       temp = (char*)realloc(temp,tempSize*sizeof(char));
+		       temp[tempSize-1] = sub_block[j+1];
+		       tempSize++;
+		       temp = (char*)realloc(temp,tempSize*sizeof(char));
+		       temp[tempSize-1] = sub_block[j+2];
+		       
+		       j+=3;
+		       int index = 0;
+		       commands[whichCommand] = malloc(tempSize*sizeof(char));
+		       for(index=0;index<tempSize;index++)
+			 {
+			   commands[whichCommand][index] = temp[index];
+			 }
+		       
+		       if(whichCommand == 0)
+			 {
+			   printf("A: ");
+			   printf(commands[whichCommand]);
+		       printf("\n");
+		       tempSize = 0;
+		       free(temp);
+		       temp = malloc(sizeof(char));
+			   whichCommand++;
+			   if((((sub_block[j] == ' ') || (sub_block[j] == '\n')) && sub_block[j+1] == 't' && sub_block[j+2] == 'h' && sub_block[j+3] == 'e' && sub_block[j+4] == 'n') && ((sub_block[j+5] == ' ') || (sub_block[j+5] == '\n')))
+			     {
+			       j=j+4;
+			     }
+		       
+
+			 }
+		       else if(whichCommand == 1)
+			 {
+			   
+			   printf("B: ");
+		       printf(commands[whichCommand]);
+		       printf("\n");
+		       tempSize = 0;
+		       free(temp);
+		       temp = malloc(sizeof(char));
+			   whichCommand++;
+			   //printf("%c",sub_block[j]);
+			   //printf("\n");
+			   if((((sub_block[j] == ' ') || (sub_block[j] == '\n')) && sub_block[j+1] == 'e' && sub_block[j+2] == 'l' && sub_block[j+3] == 's' && sub_block[j+4] == 'e') && ((sub_block[j+5] == ' ') || (sub_block[j+5] == '\n')))
+			     {
+			       printf("here");
+			       printf("%c",sub_block[j]);
+			       printf("\n");
+			       j=j+4;
+			     }
+			 }
+		       else if(whichCommand == 2)
+			 {
+			   printf("C: ");
+		       printf(commands[whichCommand]);
+		       printf("\n");
+		       tempSize = 0;
+		       free(temp);
+		       temp = malloc(sizeof(char));
+			   whichCommand++;
+			   if((((sub_block[j] == ' ') || (sub_block[j] == '\n')) && sub_block[j+1] == 'f' && sub_block[j+2] == 'i' && ((sub_block[j+3] == ' ') || (sub_block[j+3] == '\n'))))
+			     {
+			       j=j+2;
+			     }
+			 }
+		     }
+		   
+		 }
+	      if(whichCommand == 0)
+			 {
+	      if((((sub_block[j] == ' ') || (sub_block[j] == '\n')) && sub_block[j+1] == 't' && sub_block[j+2] == 'h' && sub_block[j+3] == 'e' && sub_block[j+4] == 'n') && ((sub_block[j+5] == ' ') || (sub_block[j+5] == '\n')) && ifCount==0)
+		{
+		  int index = 0;
+		  commands[whichCommand] = malloc(tempSize*sizeof(char));
+		  for(index=0;index<tempSize;index++)
+		  {
+		     commands[whichCommand][index] = temp[index];
+		  }
+		  printf("A: ");
+		  printf(commands[whichCommand]);
+		  printf("\n");
+		  whichCommand++;
+		  j=j+4;
+		  tempSize = 0;
+		  free(temp);
+		  temp = malloc(sizeof(char));
+		  //char* newString = malloc(sizeof(char));
+		  //temp = newString;
+		}
+	      else
+		{
+		  if(sub_block[j+1] == '\0' && ifCount==0)
+		    {
+		      int index = 0;
+		  commands[whichCommand] = malloc(tempSize*sizeof(char));
+		  for(index=0;index<tempSize;index++)
+		  {
+		     commands[whichCommand][index] = temp[index];
+		  }
+		  printf("A: ");
+		  printf(commands[whichCommand]);
+		  printf("\n");
+		  whichCommand++;
+		  j=j+4;
+		  tempSize = 0;
+		  free(temp);
+		  temp = malloc(sizeof(char));
+		    }
+		}
+			 }
+	      else if(whichCommand == 1)
+			 {
+	      if((((sub_block[j] == ' ') || (sub_block[j] == '\n')) && sub_block[j+1] == 'e' && sub_block[j+2] == 'l' && sub_block[j+3] == 's' && sub_block[j+4] == 'e') && ((sub_block[j+5] == ' ') || (sub_block[j+5] == '\n')))
+			     {
+			       
+			       int index = 0;
+		       commands[whichCommand] = malloc(tempSize*sizeof(char));
+		       for(index=0;index<tempSize;index++)
+			 {
+			   commands[whichCommand][index] = temp[index];
+			 }
+			       printf("B: ");
+			       printf(commands[whichCommand]);
+			       printf("\n");
+			       whichCommand++;
+			       j=j+4;
+			       tempSize = 0;
+			      free(temp);
+		       temp = malloc(sizeof(char));
+			     }
+	      else
+		{
+		  if(sub_block[j+1] == '\0' && ifCount==0)
+		    {
+		      int index = 0;
+		      //printf("which command: ");printf("%i",tempSize);
+		       commands[whichCommand] = malloc(tempSize*sizeof(char));
+		       for(index=0;index<tempSize;index++)
+			 {
+			   commands[whichCommand][index] = temp[index];
+			 }
+			       
+			       j=j+4;
+			       tempSize = 0;
+			      free(temp);
+			      temp = malloc(sizeof(char));
+			      printf("B: ");
+			       printf(commands[whichCommand]);
+			       printf("\n");
+			       whichCommand++;
+			       return commands;
+		    }
+		}
+
+			 }
+	      else if(whichCommand == 2)
+			 {
+	       
+	if(sub_block[j+1]=='\0')
+			     {		     
+			       int index = 0;
+		       commands[whichCommand] = malloc(tempSize*sizeof(char));
+		       
+		       strncpy(commands[whichCommand],temp,tempSize);
+			       
+			       j=j+2;
+			       memset(temp,"\0",tempSize);
+			       tempSize = 0;
+			       // free(temp);
+			       // temp = malloc(sizeof(char));
+			      
+			      printf("C: ");
+			      printf(commands[whichCommand]);
+			       printf("\n");
+			       whichCommand++;
+			     }
+
+			 }
+	      j++;
+	    }
+	  return commands;
+	  break;
+	  
+	  
+        }
+      //END OF THE IF BLOCK
+      if((strncmp(buffer_block,"while",5)==0))
+	{
+	  type = WHILE_COMMAND;
+	  int whileCount = 1;
+	  int subSize = 0;
+	  int whichCommand = 0;
+	  int k = x+2;
+	  free(sub_block);
+	  sub_block = malloc(sizeof(char));
+
+	  sub_block = findWhileBlock(c,k);
+	  printf("Sub block: "); printf(sub_block);printf("\n");
+	  int j = 0;
+	  char* temp = malloc(sizeof(char));
+	  int tempSize = 0;
+	  whileCount = 0;
+	  while(sub_block[j]!='\0')
+	    {
+	      tempSize++;
+	      temp = (char*)realloc(temp,tempSize*sizeof(char));
+	      temp[tempSize-1] = sub_block[j];
+	      //printf("%c",sub_block[j]);
+	      //printf("\n");
+	      if(sub_block[j] == 'w' && sub_block[j+1] == 'h' && sub_block[j+2] == 'i' && sub_block[j+3] == 'l'&& sub_block[j+4] == 'e' && (sub_block[j+5] == ' ' || sub_block[j+5] == '\n'))
+		 {
+		   //printf("found if\n");
+		   whileCount++;
+		 }
+	      if(((sub_block[j] == ' ') || (sub_block[j] == '\n')) && sub_block[j+1] == 'd' && sub_block[j+2] == 'o' && sub_block[j+3] == 'n' && sub_block[j+4] == 'e')
+		 {
+
+		   whileCount--;
+		   if(whileCount == 0)
+		     {
+		       tempSize++;
+		       temp = (char*)realloc(temp,tempSize*sizeof(char));
+		       temp[tempSize-1] = sub_block[j+1];
+		       tempSize++;
+		       temp = (char*)realloc(temp,tempSize*sizeof(char));
+		       temp[tempSize-1] = sub_block[j+2];
+		       
+		       j+=3;
+		       int index = 0;
+		       commands[whichCommand] = malloc(tempSize*sizeof(char));
+		       for(index=0;index<tempSize;index++)
+			 {
+			   commands[whichCommand][index] = temp[index];
+			 }
+		       
+		       if(whichCommand == 0)
+			 {
+			   printf("A: ");
+		       printf(commands[whichCommand]);
+		       printf("\n");
+		       tempSize = 0;
+		       free(temp);
+		       temp = malloc(sizeof(char));
+			   whichCommand++;
+			   if((((sub_block[j] == ' ') || (sub_block[j] == '\n')) && sub_block[j+1] == 'd' && sub_block[j+2] == 'o' && ((sub_block[j+3] == ' ') || (sub_block[j+3] == '\n'))))
+			     {
+			       j=j+2;
+			     }
+		       
+
+			 }
+		       else if(whichCommand == 1)
+			 {
+			   
+			   printf("B: ");
+		       printf(commands[whichCommand]);
+		       printf("\n");
+		       tempSize = 0;
+		       free(temp);
+		       temp = malloc(sizeof(char));
+			   whichCommand++;
+			   //printf("%c",sub_block[j]);
+			   //printf("\n");
+			   if((((sub_block[j] == ' ') || (sub_block[j] == '\n')) && sub_block[j+1] == 'd' && sub_block[j+2] == 'o' && sub_block[j+3] == 'n' && sub_block[j+4] == 'e') && ((sub_block[j+5] == ' ') || (sub_block[j+5] == '\n')))
+			     {
+			       printf("here");
+			       printf("%c",sub_block[j]);
+			       printf("\n");
+			       j=j+4;
+			     }
+			 }
+		     }
+		   
+		 }
+	      if(whichCommand == 0)
+			 {
+			   if((((sub_block[j] == ' ') || (sub_block[j] == '\n')) && sub_block[j+1] == 'd' && sub_block[j+2] == 'o'  && ((sub_block[j+3] == ' ') || (sub_block[j+3] == '\n')) && whileCount==0))
+		{
+		  int index = 0;
+		  commands[whichCommand] = malloc(tempSize*sizeof(char));
+		  for(index=0;index<tempSize;index++)
+		  {
+		     commands[whichCommand][index] = temp[index];
+		  }
+		  printf("A: ");
+		  printf(commands[whichCommand]);
+		  printf("\n");
+		  whichCommand++;
+		  j=j+2;
+		  tempSize = 0;
+		  free(temp);
+		  temp = malloc(sizeof(char));
+		  //char* newString = malloc(sizeof(char));
+		  //temp = newString;
+		}
+			   else
+			     {
+			       if(sub_block[j+1] == '\0' && whileCount==0)
+				 {
+				   int index = 0;
+				   commands[whichCommand] = malloc(tempSize*sizeof(char));
+				   for(index=0;index<tempSize;index++)
+				     {
+				       commands[whichCommand][index] = temp[index];
+				     }
+				   printf("A: ");
+				   printf(commands[whichCommand]);
+				   printf("\n");
+				   whichCommand++;
+				   j=j+4;
+				   tempSize = 0;
+				   free(temp);
+				   temp = malloc(sizeof(char));
+				 }
+			     }
+			 }
+	      else if(whichCommand == 1)
+			 {
+	      	if(sub_block[j+1]=='\0')
+			     {
+			       
+			       int index = 0;
+		       commands[whichCommand] = malloc(tempSize*sizeof(char));
+		       for(index=0;index<tempSize;index++)
+			 {
+			   commands[whichCommand][index] = temp[index];
+			 }
+			       printf("B: ");
+			       printf(commands[whichCommand]);
+			       printf("\n");
+			       whichCommand++;
+			       j=j+4;
+			       tempSize = 0;
+			      free(temp);
+		       temp = malloc(sizeof(char));
+			     }
+
+			 }
+	      j++;
+	      }
+	  
+	  break;
+	  
+	  
+        }
+      //END OF WHILE BLOCK
+      
+ if((strncmp(buffer_block,"until",5)==0))
+	{
+	  type = WHILE_COMMAND;
+	  int untilCount = 1;
+	  int subSize = 0;
+	  int whichCommand = 0;
+	  int k = x+2;
+	  free(sub_block);
+	  sub_block = malloc(sizeof(char));
+
+	  sub_block = findUntilBlock(c,k);
+	  printf("Sub block: "); printf(sub_block);printf("\n");
+	  int j = 0;
+	  char* temp = malloc(sizeof(char));
+	  int tempSize = 0;
+	  untilCount = 0;
+	  while(sub_block[j]!='\0')
+	    {
+	      tempSize++;
+	      temp = (char*)realloc(temp,tempSize*sizeof(char));
+	      temp[tempSize-1] = sub_block[j];
+	      //printf("%c",sub_block[j]);
+	      //printf("\n");
+	      if(sub_block[j] == 'u' && sub_block[j+1] == 'n' && sub_block[j+2] == 't' && sub_block[j+3] == 'i'&& sub_block[j+4] == 'l' && (sub_block[j+5] == ' ' || sub_block[j+5] == '\n'))
+		 {
+		   //printf("found if\n");
+		   untilCount++;
+		 }
+	      if(((sub_block[j] == ' ') || (sub_block[j] == '\n')) && sub_block[j+1] == 'd' && sub_block[j+2] == 'o' && sub_block[j+3] == 'n' && sub_block[j+4] == 'e')
+		 {
+
+		   untilCount--;
+		   if(untilCount == 0)
+		     {
+		       tempSize++;
+		       temp = (char*)realloc(temp,tempSize*sizeof(char));
+		       temp[tempSize-1] = sub_block[j+1];
+		       tempSize++;
+		       temp = (char*)realloc(temp,tempSize*sizeof(char));
+		       temp[tempSize-1] = sub_block[j+2];
+		       
+		       j+=3;
+		       int index = 0;
+		       commands[whichCommand] = malloc(tempSize*sizeof(char));
+		       for(index=0;index<tempSize;index++)
+			 {
+			   commands[whichCommand][index] = temp[index];
+			 }
+		       
+		       if(whichCommand == 0)
+			 {
+			   printf("A: ");
+		       printf(commands[whichCommand]);
+		       printf("\n");
+		       tempSize = 0;
+		       free(temp);
+		       temp = malloc(sizeof(char));
+			   whichCommand++;
+			   if((((sub_block[j] == ' ') || (sub_block[j] == '\n')) && sub_block[j+1] == 'd' && sub_block[j+2] == 'o' && ((sub_block[j+3] == ' ') || (sub_block[j+3] == '\n'))))
+			     {
+			       j=j+2;
+			     }
+		       
+
+			 }
+		       else if(whichCommand == 1)
+			 {
+			   
+			   printf("B: ");
+		       printf(commands[whichCommand]);
+		       printf("\n");
+		       tempSize = 0;
+		       free(temp);
+		       temp = malloc(sizeof(char));
+			   whichCommand++;
+			   //printf("%c",sub_block[j]);
+			   //printf("\n");
+			   if((((sub_block[j] == ' ') || (sub_block[j] == '\n')) && sub_block[j+1] == 'd' && sub_block[j+2] == 'o' && sub_block[j+3] == 'n' && sub_block[j+4] == 'e') && ((sub_block[j+5] == ' ') || (sub_block[j+5] == '\n')))
+			     {
+			       j=j+4;
+			     }
+			 }
+		     }
+		   
+		 }
+	      if(whichCommand == 0)
+			 {
+			   if((((sub_block[j] == ' ') || (sub_block[j] == '\n')) && sub_block[j+1] == 'd' && sub_block[j+2] == 'o'  && ((sub_block[j+3] == ' ') || (sub_block[j+3] == '\n')) && untilCount==0))
+		{
+		  int index = 0;
+		  commands[whichCommand] = malloc(tempSize*sizeof(char));
+		  for(index=0;index<tempSize;index++)
+		  {
+		     commands[whichCommand][index] = temp[index];
+		  }
+		  printf("A: ");
+		  printf(commands[whichCommand]);
+		  printf("\n");
+		  whichCommand++;
+		  j=j+2;
+		  tempSize = 0;
+		  free(temp);
+		  temp = malloc(sizeof(char));
+		  //char* newString = malloc(sizeof(char));
+		  //temp = newString;
+		}
+			 }
+	      else if(whichCommand == 1)
+			 {
+	      	if(sub_block[j+1]=='\0')
+			     {
+			       
+			       int index = 0;
+		       commands[whichCommand] = malloc(tempSize*sizeof(char));
+		       for(index=0;index<tempSize;index++)
+			 {
+			   commands[whichCommand][index] = temp[index];
+			 }
+			       printf("B: ");
+			       printf(commands[whichCommand]);
+			       printf("\n");
+			       whichCommand++;
+			       j=j+4;
+			       tempSize = 0;
+			      free(temp);
+		       temp = malloc(sizeof(char));
+			     }
+
+			 }
+	      j++;
+	      }
+	  
+	  break;
+	  
+	  
+        }
+ //END of UNTIL BLOCK
+  if((strncmp(c,"(",1)==0))
+	{
+	  type = SUBSHELL_COMMAND;
+	  int untilCount = 1;
+	  int subSize = 0;
+	  int whichCommand = 0;
+	  int k = x+2;
+	  free(sub_block);
+	  
+	  int j = 0;
+	  char* temp = malloc(sizeof(char));
+	  int tempSize = 0;
+	  untilCount = 0;
+	  while(c[j]!='\0')
+	    {
+	      if(isalphaNum(c[j]))
+		{
+	      tempSize++;
+	      temp = (char*)realloc(temp,tempSize*sizeof(char));
+	      temp[tempSize-1] = c[j];
+		}
+	      if(c[j+1]==')')
+		{
+		  int index = 0;
+		   commands[0] = malloc(tempSize*sizeof(char));
+		  for(index=0;index<tempSize;index++)
+		  {
+		     commands[0][index] = temp[index];
+		  }
+		  printf("A: "); printf(commands[0]);
+		  return commands;
+		}
+	     
+	      
+	      j++;
+	    }
+	  printf("Something fucked up with the sub shell\n");
+	  
+	  break;
+	  
+	  
+        }
+  //END OF SUBSHELL_COMMAND
+ 
+  if(buffer_block[x]=='<' || buffer_block[x]=='>')
+	{
+	  
+	  type = SEQUENCE_COMMAND;
+	  int subSize = 0;
+	  int whichCommand = 0;
+	  
+	  free(sub_block);
+	  int index = 0;
+	  commands[0] = malloc((x-1)*sizeof(char));
+	  for(index=0;index<x-1;index++)
+	  {
+	     commands[0][index] = buffer_block[index];
+	  }
+	  
+	  int j = x+1;
+	  char* temp = malloc(sizeof(char));
+	  int tempSize = 0;
+	  while(c[j]!='\0')
+	    {
+	      tempSize++;
+	      temp = (char*)realloc(temp,tempSize*sizeof(char));
+	      temp[tempSize-1] = c[j];
+	       
+
+	      j++;
+	    }
+	  
+	  index = 0;
+		   commands[1] = malloc(tempSize*sizeof(char));
+		  for(index=0;index<tempSize;index++)
+		  {
+		     commands[1][index] = temp[index];
+		  }
+		  printf("A: "); printf(commands[0]);
+		  printf("\n");
+		  printf("B: "); printf(commands[1]);
+		  return commands;
+	  break;
+	  
+	  
+        }
+  //END OF SEQUENCE COMMAND
+  if(buffer_block[x]=='|')
+	{
+	  type = PIPE_COMMAND;
+	  int subSize = 0;
+	  int whichCommand = 0;
+	  
+	  free(sub_block);
+	  int index = 0;
+	  commands[0] = malloc((x-1)*sizeof(char));
+	  for(index=0;index<x-1;index++)
+	  {
+	     commands[0][index] = buffer_block[index];
+	  }
+	  
+	  int j = x+1;
+	  char* temp = malloc(sizeof(char));
+	  int tempSize = 0;
+	  while(c[j]!='\0')
+	    {
+	      
+	      tempSize++;
+	      temp = (char*)realloc(temp,tempSize*sizeof(char));
+	      temp[tempSize-1] = c[j];
+	       
+
+	      j++;
+	    }
+	  
+	  index = 0;
+		   commands[1] = malloc(tempSize*sizeof(char));
+		  for(index=0;index<tempSize;index++)
+		  {
+		     commands[1][index] = temp[index];
+		  }
+		  //printf("A: "); printf(commands[0]);
+		  //printf("\n");
+		  //printf("B: "); printf(commands[1]);
+		  return commands;
+	  break;
+	  
+	  
+        }
+  //END OF PIPE COMMAND
+      x++;
+    }
+  
+   if(isSimpleCommand(c))
+	{
+	  type = SIMPLE_COMMAND;
+	  int index = 0;
+	  commands[0] = malloc((x-1)*sizeof(char));
+	  for(index=0;index<x;index++)
+	  {
+	     commands[0][index] = c[index];
+	     
+	  }
+	  printf("A: "); printf(commands[0]);
+	  printf("\n");
+	}
+
+  return commands;
   
 }
-/*
-struct node* saveToNode(char* str, struct node* current, int flag, int size)
-{
-  return NULL;
-  }*/
 
 command_stream_t
 make_command_stream (int (*get_next_byte) (void *),
@@ -153,65 +923,57 @@ make_command_stream (int (*get_next_byte) (void *),
   char current_char;
   int line = 1;
   int i=1;
+  
+  //Load the entire script into a buffer
   while((current_byte = get_next_byte(get_next_byte_argument))!= EOF){
     current_char = current_byte;
     buffer = (char*)realloc(buffer,i*sizeof(char));
     buffer[i-1]=current_char;
     i++;
-
   }
+  
   int x=0;
-  char* buffer_block = (char*)checked_malloc(i*sizeof(char));
+  char* buffer_block;
   int start = 0;
   int size = i;
   int wordCount = 0;
+  int type = 0;
+  char** commands;
+  char* test;
+  
+  buffer_block = parseIntoBlocks(buffer,&start,&size);
+  int index = 0;
+  test = malloc(sizeof(char));
+  while(buffer_block[index]!='\0')
+	  {
+	    index++;
+	    test = realloc(test,index*sizeof(char));
+	     test[index-1] = buffer_block[index-1];
+	     
+	  }
 
   while(buffer_block!='\0')
-    {
-
-      buffer_block = parseIntoBlocks(buffer,&start,&size);
-      
-    }
-  /*
-  for(x=0;x<i;x++)
-    {
-      
-      if(isalphaNum(buffer[x]) || buffer[x]==' ')
-      {
-
-	wordSize++;
-	buffer_block = (char*)realloc(buffer_block,wordSize*sizeof(char));
-	buffer_block[wordSize-1] = buffer[x];
-	
-      }
-    
-      
-      if((strncmp(buffer_block,"if",2)==0))
-      {
-	printf(buffer_block);
-	printf("\n");
-	int k = x+1;
-	while(isalphaNum(buffer[k]) || buffer[x]==' ' || isOperator(buffer[k]))
+  {
+      //grab a block
+    printf("Buffer_Block: ");
+    printf(buffer_block);
+    printf("\n");
+    // commands = parseBlock(buffer_block);
+    //char* buffer_block;
+    buffer_block = parseIntoBlocks(buffer,&start,&size);
+    printf("right here");
+    printf("\n");
+       index = 0;
+       free(test);
+       test = malloc(sizeof(char));
+       while(buffer_block[index]!='\0')
 	  {
-	    printf("%i",k);
-	    printf("\n");
-	    wordSize++;
-	    buffer_block = (char*)realloc(buffer_block,wordSize*sizeof(char));
-	    buffer_block[wordSize-1] = buffer[k];
-	    printf(buffer_block);
-	    printf("\n");
-	    if(buffer[k] == 'i' && buffer[k-1] == 'f' && buffer[k-2] == ' ')
-	      {
+	    index++;
+	    test = realloc(test,index*sizeof(char));
+	    test[index-1] = buffer_block[index-1];
 	     
-		return 0;
-		break;
-		}
-	    k++;
 	  }
-	 x = x+k;
-	 }
-   
-    }*/
+    }
 
    return 0;
 }
@@ -221,3 +983,4 @@ read_command_stream (command_stream_t s)
 {
   return NULL;
 }
+
