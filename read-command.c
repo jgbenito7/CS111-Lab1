@@ -87,7 +87,7 @@ int isalphaNum(char c)
     return 1;
   if(c>=97 && c<=122)
     return 1;
-  if(c == '!' || c == '%' || c == '+' || c == ',' || c == '-' || c == '.' || c == '/' || c == '@' || c == '^' || c == '_')
+  if(c == '!' || c == '%' || c == '+' || c == ',' || c == '-' || c == '.' || c == '/' || c == '@' || c == '^' || c == '_' || c == ' ')
     return 1;
   return 0;
 }
@@ -139,7 +139,7 @@ char* findIfBlock(char* c, int k)
 {
   int subSize = 0;
   char* sub_block = malloc(sizeof(char));
-  char* error_message = "you fucked up. Quit CS right now";
+  char* error_message = "Check you if syntax";
   int ifCount = 1;
   while(c[k]!='\0')
 	    {
@@ -178,11 +178,14 @@ char* findWhileBlock(char* c, int k)
 		 {
 		   whileCount++;
 		 }
-	      if(((c[k] == ' ') || (c[k] == '\n')) && c[k+1] == 'd' && c[k+2] == 'o' && c[k+3] == 'n' && c[k+4] == 'e')
+	      if(((c[k] == ' ') || (c[k] == '\n')) && c[k+1] == 'd' && c[k+2] == 'o' && c[k+3] == 'n' && c[k+4] == 'e' && (c[k+5] == '\0' || c[k+5] == '\n'))
 		 {
 		   whileCount--;
 		   if(whileCount == 0)
 		     {
+		       printf("Here is the motherfucking sub block: ");
+		       printf(sub_block);
+		       printf("\n");
 		       return sub_block;
 		     }
 		   
@@ -221,35 +224,30 @@ char* findUntilBlock(char* c, int k)
   return error_message;
 }
 char* commands[3];
-char** parseBlock(char* c)
+char** parseBlock(char* c,int* type)
 {
-  int type;
-  
+  //printf(c);
   int wordSize = 0;
   char* buffer_block = malloc(sizeof(char));
-  int flag;
   int x = 0;
   char* sub_block;
   while(c[x]!='\0')
-    {
-  
-	  wordSize++;
+    {	    
+	  
+      wordSize++;
 	  buffer_block = (char*)realloc(buffer_block,wordSize*sizeof(char));
 	  buffer_block[wordSize-1] = c[x];
-	
-    
+
       
       if((strncmp(buffer_block,"if",2)==0))
 	{
-	  type = IF_COMMAND;
+	  *type = IF_COMMAND;
 	  int ifCount = 1;
-	  int subSize = 0;
 	  int whichCommand = 0;
 	  int k = x+2;
 	  
 
 	  sub_block = findIfBlock(c,k);
-	  printf("Sub block: "); printf(sub_block);printf("\n");
 	  int j = 0;
 	  char* temp = malloc(sizeof(char));
 	  int tempSize = 0;
@@ -259,8 +257,6 @@ char** parseBlock(char* c)
 	      tempSize++;
 	      temp = (char*)realloc(temp,tempSize*sizeof(char));
 	      temp[tempSize-1] = sub_block[j];
-	      //printf("%c",sub_block[j]);
-	      //printf("\n");
 	      if(sub_block[j] == 'i' && sub_block[j+1] == 'f' && (sub_block[j+2] == ' ' || sub_block[j+2] == '\n'))
 		 {
 		   //printf("found if\n");
@@ -307,27 +303,22 @@ char** parseBlock(char* c)
 			 {
 			   
 			   printf("B: ");
-		       printf(commands[whichCommand]);
-		       printf("\n");
+			   printf(commands[whichCommand]);
+			   printf("\n");
 		       tempSize = 0;
 		       free(temp);
 		       temp = malloc(sizeof(char));
 			   whichCommand++;
-			   //printf("%c",sub_block[j]);
-			   //printf("\n");
 			   if((((sub_block[j] == ' ') || (sub_block[j] == '\n')) && sub_block[j+1] == 'e' && sub_block[j+2] == 'l' && sub_block[j+3] == 's' && sub_block[j+4] == 'e') && ((sub_block[j+5] == ' ') || (sub_block[j+5] == '\n')))
 			     {
-			       printf("here");
-			       printf("%c",sub_block[j]);
-			       printf("\n");
 			       j=j+4;
 			     }
 			 }
 		       else if(whichCommand == 2)
 			 {
 			   printf("C: ");
-		       printf(commands[whichCommand]);
-		       printf("\n");
+			   printf(commands[whichCommand]);
+			   printf("\n");
 		       tempSize = 0;
 		       free(temp);
 		       temp = malloc(sizeof(char));
@@ -432,7 +423,6 @@ char** parseBlock(char* c)
 	       
 	if(sub_block[j+1]=='\0')
 			     {		     
-			       int index = 0;
 		       commands[whichCommand] = malloc(tempSize*sizeof(char));
 		       
 		       strncpy(commands[whichCommand],temp,tempSize);
@@ -460,16 +450,13 @@ char** parseBlock(char* c)
       //END OF THE IF BLOCK
       if((strncmp(buffer_block,"while",5)==0))
 	{
-	  type = WHILE_COMMAND;
+	  *type = WHILE_COMMAND;
 	  int whileCount = 1;
-	  int subSize = 0;
+	  int until_count = 0;
 	  int whichCommand = 0;
 	  int k = x+2;
-	  free(sub_block);
 	  sub_block = malloc(sizeof(char));
-
 	  sub_block = findWhileBlock(c,k);
-	  printf("Sub block: "); printf(sub_block);printf("\n");
 	  int j = 0;
 	  char* temp = malloc(sizeof(char));
 	  int tempSize = 0;
@@ -479,17 +466,22 @@ char** parseBlock(char* c)
 	      tempSize++;
 	      temp = (char*)realloc(temp,tempSize*sizeof(char));
 	      temp[tempSize-1] = sub_block[j];
-	      //printf("%c",sub_block[j]);
-	      //printf("\n");
 	      if(sub_block[j] == 'w' && sub_block[j+1] == 'h' && sub_block[j+2] == 'i' && sub_block[j+3] == 'l'&& sub_block[j+4] == 'e' && (sub_block[j+5] == ' ' || sub_block[j+5] == '\n'))
 		 {
-		   //printf("found if\n");
 		   whileCount++;
+		 }
+	       if(sub_block[j] == 'u' && sub_block[j+1] == 'n' && sub_block[j+2] == 't' && sub_block[j+3] == 'i'&& sub_block[j+4] == 'l' && (sub_block[j+5] == ' ' || sub_block[j+5] == '\n'))
+		 {
+		   until_count++;
 		 }
 	      if(((sub_block[j] == ' ') || (sub_block[j] == '\n')) && sub_block[j+1] == 'd' && sub_block[j+2] == 'o' && sub_block[j+3] == 'n' && sub_block[j+4] == 'e')
 		 {
-
-		   whileCount--;
+		   if(until_count == 0)
+		     { whileCount--;}
+		   else
+		     {
+		       until_count--;
+		     }
 		   if(whileCount == 0)
 		     {
 		       tempSize++;
@@ -498,7 +490,7 @@ char** parseBlock(char* c)
 		       tempSize++;
 		       temp = (char*)realloc(temp,tempSize*sizeof(char));
 		       temp[tempSize-1] = sub_block[j+2];
-		       
+
 		       j+=3;
 		       int index = 0;
 		       commands[whichCommand] = malloc(tempSize*sizeof(char));
@@ -509,6 +501,8 @@ char** parseBlock(char* c)
 		       
 		       if(whichCommand == 0)
 			 {
+			   printf("This is where you done fucked up");
+			   printf("\n");
 			   printf("A: ");
 		       printf(commands[whichCommand]);
 		       printf("\n");
@@ -518,6 +512,7 @@ char** parseBlock(char* c)
 			   whichCommand++;
 			   if((((sub_block[j] == ' ') || (sub_block[j] == '\n')) && sub_block[j+1] == 'd' && sub_block[j+2] == 'o' && ((sub_block[j+3] == ' ') || (sub_block[j+3] == '\n'))))
 			     {
+			       
 			       j=j+2;
 			     }
 		       
@@ -533,13 +528,8 @@ char** parseBlock(char* c)
 		       free(temp);
 		       temp = malloc(sizeof(char));
 			   whichCommand++;
-			   //printf("%c",sub_block[j]);
-			   //printf("\n");
 			   if((((sub_block[j] == ' ') || (sub_block[j] == '\n')) && sub_block[j+1] == 'd' && sub_block[j+2] == 'o' && sub_block[j+3] == 'n' && sub_block[j+4] == 'e') && ((sub_block[j+5] == ' ') || (sub_block[j+5] == '\n')))
 			     {
-			       printf("here");
-			       printf("%c",sub_block[j]);
-			       printf("\n");
 			       j=j+4;
 			     }
 			 }
@@ -564,8 +554,6 @@ char** parseBlock(char* c)
 		  tempSize = 0;
 		  free(temp);
 		  temp = malloc(sizeof(char));
-		  //char* newString = malloc(sizeof(char));
-		  //temp = newString;
 		}
 			   else
 			     {
@@ -621,16 +609,13 @@ char** parseBlock(char* c)
       
  if((strncmp(buffer_block,"until",5)==0))
 	{
-	  type = WHILE_COMMAND;
+	  *type = UNTIL_COMMAND;
 	  int untilCount = 1;
-	  int subSize = 0;
 	  int whichCommand = 0;
 	  int k = x+2;
-	  free(sub_block);
 	  sub_block = malloc(sizeof(char));
 
 	  sub_block = findUntilBlock(c,k);
-	  printf("Sub block: "); printf(sub_block);printf("\n");
 	  int j = 0;
 	  char* temp = malloc(sizeof(char));
 	  int tempSize = 0;
@@ -640,11 +625,8 @@ char** parseBlock(char* c)
 	      tempSize++;
 	      temp = (char*)realloc(temp,tempSize*sizeof(char));
 	      temp[tempSize-1] = sub_block[j];
-	      //printf("%c",sub_block[j]);
-	      //printf("\n");
 	      if(sub_block[j] == 'u' && sub_block[j+1] == 'n' && sub_block[j+2] == 't' && sub_block[j+3] == 'i'&& sub_block[j+4] == 'l' && (sub_block[j+5] == ' ' || sub_block[j+5] == '\n'))
 		 {
-		   //printf("found if\n");
 		   untilCount++;
 		 }
 	      if(((sub_block[j] == ' ') || (sub_block[j] == '\n')) && sub_block[j+1] == 'd' && sub_block[j+2] == 'o' && sub_block[j+3] == 'n' && sub_block[j+4] == 'e')
@@ -694,8 +676,6 @@ char** parseBlock(char* c)
 		       free(temp);
 		       temp = malloc(sizeof(char));
 			   whichCommand++;
-			   //printf("%c",sub_block[j]);
-			   //printf("\n");
 			   if((((sub_block[j] == ' ') || (sub_block[j] == '\n')) && sub_block[j+1] == 'd' && sub_block[j+2] == 'o' && sub_block[j+3] == 'n' && sub_block[j+4] == 'e') && ((sub_block[j+5] == ' ') || (sub_block[j+5] == '\n')))
 			     {
 			       j=j+4;
@@ -722,8 +702,6 @@ char** parseBlock(char* c)
 		  tempSize = 0;
 		  free(temp);
 		  temp = malloc(sizeof(char));
-		  //char* newString = malloc(sizeof(char));
-		  //temp = newString;
 		}
 			   else
 			     {
@@ -778,13 +756,8 @@ char** parseBlock(char* c)
  //END of UNTIL BLOCK
   if((strncmp(c,"(",1)==0))
 	{
-	  type = SUBSHELL_COMMAND;
+	  *type = SUBSHELL_COMMAND;
 	  int untilCount = 1;
-	  int subSize = 0;
-	  int whichCommand = 0;
-	  int k = x+2;
-	  free(sub_block);
-	  
 	  int j = 0;
 	  char* temp = malloc(sizeof(char));
 	  int tempSize = 0;
@@ -823,14 +796,10 @@ char** parseBlock(char* c)
   if(buffer_block[x]=='<' || buffer_block[x]=='>')
 	{
 	  
-	  type = SEQUENCE_COMMAND;
-	  int subSize = 0;
-	  int whichCommand = 0;
-	  
-	  free(sub_block);
+	  *type = SEQUENCE_COMMAND;
 	  int index = 0;
 	  commands[0] = malloc((x-1)*sizeof(char));
-	  for(index=0;index<x-1;index++)
+	  for(index=0;index<x;index++)
 	  {
 	     commands[0][index] = buffer_block[index];
 	  }
@@ -853,10 +822,7 @@ char** parseBlock(char* c)
 		  for(index=0;index<tempSize;index++)
 		  {
 		     commands[1][index] = temp[index];
-		  }
-		  printf("A: "); printf(commands[0]);
-		  printf("\n");
-		  printf("B: "); printf(commands[1]);
+		  }		  
 		  return commands;
 	  break;
 	  
@@ -865,11 +831,7 @@ char** parseBlock(char* c)
   //END OF SEQUENCE COMMAND
   if(buffer_block[x]=='|')
 	{
-	  type = PIPE_COMMAND;
-	  int subSize = 0;
-	  int whichCommand = 0;
-	  
-	  free(sub_block);
+	  *type = PIPE_COMMAND;
 	  int index = 0;
 	  commands[0] = malloc((x-1)*sizeof(char));
 	  for(index=0;index<x-1;index++)
@@ -911,7 +873,7 @@ char** parseBlock(char* c)
   
    if(isSimpleCommand(c))
 	{
-	  type = SIMPLE_COMMAND;
+	  *type = SIMPLE_COMMAND;
 	  int index = 0;
 	  commands[0] = malloc((x-1)*sizeof(char));
 	  for(index=0;index<x;index++)
@@ -927,19 +889,33 @@ char** parseBlock(char* c)
   
 }
 
+void treeMaker(char* block, int* type, command_t c)
+{
+  
+  c->type = *type;
+  printf("in here\n");
+  if(*type == SIMPLE_COMMAND)
+    {
+      strcpy(c->u.word,block);
+      return;
+    }
+  char** strArray = parseBlock(block,type);
+  treeMaker(strArray[0],type, c->u.command[0]);
+  treeMaker(strArray[1],type,c->u.command[1]);
+  treeMaker(strArray[2],type,c->u.command[2]);
+
+}
+
 command_stream_t
 make_command_stream (int (*get_next_byte) (void *),
 		     void *get_next_byte_argument)
 {
   command_stream_t stream = checked_malloc(sizeof(struct command_stream));
-  command_node_t head = NULL;
   stream->commands = checked_malloc(sizeof(struct command_node));
-  head = stream->commands;
-  command_node_t current = head;
+  command_node_t current = stream->commands;
+
   int current_byte;
   char* buffer = (char*)checked_malloc(sizeof(char));
-  char* str = (char*)checked_malloc(sizeof(char));
-  int wordSize=0;
   char current_char;
   int line = 1;
   int i=1;
@@ -951,52 +927,58 @@ make_command_stream (int (*get_next_byte) (void *),
     buffer[i-1]=current_char;
     i++;
   }
-  
-  int x=0;
   char* buffer_block;
   int start = 0;
   int size = i;
-  int wordCount = 0;
   int type = 0;
   char** commands;
   char* test;
-  
-  buffer_block = parseIntoBlocks(buffer,&start,&size);
-  int index = 0;
-  test = malloc(sizeof(char));
-  while(buffer_block[index]!='\0')
+  while(1) 
+  {
+    
+    //grab a block
+      buffer_block = parseIntoBlocks(buffer,&start,&size);
+      if(buffer_block == '\0')
+      	break;
+      int index = 0;
+      test = malloc(sizeof(char));
+      while(buffer_block[index]!='\0')
 	  {
 	    index++;
 	    test = realloc(test,index*sizeof(char));
-	     test[index-1] = buffer_block[index-1];
-	     
+	    test[index-1] = buffer_block[index-1]; 
 	  }
- commands = parseBlock(buffer_block);
-  while(buffer_block!='\0')
-  {
-      //grab a block
     printf("Buffer_Block: ");
-    printf(buffer_block);
+    printf(test);
     printf("\n");
-   
-    //char* buffer_block;
-    buffer_block = parseIntoBlocks(buffer,&start,&size);
+    printf("\n");
+    parseBlock(test,&type);
+    //Parse the block and store the values
+    treeMaker(test,&type,current->command);
+    // command_t test = current->command;
+    current->next = checked_malloc(sizeof(struct command_node));
+    current = current->next;
+
     
+    /*printf("Commands 0: ");
+    printf(commands[0]);
     printf("\n");
-       index = 0;
-       //free(test);
-       test = malloc(sizeof(char));
-       if(buffer_block!='\0')
-	 {
-	   while(buffer_block[index]!='\0')
-	     {
-	       index++;
-	       test = realloc(test,index*sizeof(char));
-	       test[index-1] = buffer_block[index-1];
-	     
-	     }
-	 }
-    }
+    printf("Commands 1: ");
+    printf(commands[1]);
+    printf("\n");
+    printf("Commands 2: ");
+    printf(commands[2]);
+    printf("\n");*/
+
+    
+    
+    //reset the commands
+    //commands[0] = NULL;  
+    //commands[1] = NULL; 
+    //commands[2] = NULL; 
+    free(test);
+    } 
+  
 
    return 0;
 }
