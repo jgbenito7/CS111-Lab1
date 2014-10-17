@@ -27,7 +27,6 @@
 #include <ctype.h>
 
 typedef struct command_node *command_node_t;
-
 struct command_node
 {
   command_t command;
@@ -87,7 +86,7 @@ int isalphaNum(char c)
     return 1;
   if(c>=97 && c<=122)
     return 1;
-  if(c == '!' || c == '%' || c == '+' || c == ',' || c == '-' || c == '.' || c == '/' || c == '@' || c == '^' || c == '_' || c == ' ')
+  if(c == '!' || c == '%' || c == '+' || c == ',' || c == '-' || c == '.' || c == '/' || c == '@' || c == '^' || c == '_' || c == ' ' || c==':' || c=='<' || c=='>' || c=='\n')
     return 1;
   return 0;
 }
@@ -97,7 +96,7 @@ int isSimpleCommand(char* c)
   int x=0;
   char cur;
   cur = c[0];
-  while(cur!='\0')
+  while(cur!='\0' && c[x])
     {
       if(!isalphaNum(c[x]))
 	{
@@ -135,12 +134,19 @@ char* parseIntoBlocks(char* c, int *start, int *size)
   return '\0'; 
 }
 
+void syntax_error(void)
+{
+  printf("You have an error\n");
+  exit(1);
+}
+
 char* findIfBlock(char* c, int k)
 {
   int subSize = 0;
   char* sub_block = malloc(sizeof(char));
-  char* error_message = "Check you if syntax";
+  char* error_message = "Check your if syntax";
   int ifCount = 1;
+  printf("in the findifblock\n");
   while(c[k]!='\0')
 	    {
 	      subSize++;
@@ -148,6 +154,7 @@ char* findIfBlock(char* c, int k)
 	      sub_block[subSize-1] = c[k];
 	      if(c[k] == 'i' && c[k+1] == 'f' && (c[k+2] == ' ' || c[k+2] == '\n'))
 		 {
+		   printf("found an if\n");
 		   ifCount++;
 		 }
 	      if(((c[k] == ' ') || (c[k] == '\n')) && c[k+1] == 'f' && c[k+2] == 'i')
@@ -161,7 +168,7 @@ char* findIfBlock(char* c, int k)
 		 }
 	      k++;
 	    }
-  return error_message;
+  syntax_error();
 }
 char* findWhileBlock(char* c, int k)
 {
@@ -192,7 +199,7 @@ char* findWhileBlock(char* c, int k)
 		 }
 	      k++;
 	    }
-  return error_message;
+  syntax_error();
 }
 
 char* findUntilBlock(char* c, int k)
@@ -221,7 +228,7 @@ char* findUntilBlock(char* c, int k)
 		 }
 	      k++;
 	    }
-  return error_message;
+  syntax_error();
 }
 char* commands[3];
 char** parseBlock(char* c,int* type)
@@ -233,13 +240,12 @@ char** parseBlock(char* c,int* type)
   char* sub_block;
   while(c[x]!='\0')
     {	    
-	  
+      
       wordSize++;
 	  buffer_block = (char*)realloc(buffer_block,wordSize*sizeof(char));
 	  buffer_block[wordSize-1] = c[x];
 
-      
-      if((strncmp(buffer_block,"if",2)==0))
+	  if(c[x]=='i' && c[x+1]=='f')
 	{
 	  *type = IF_COMMAND;
 	  int ifCount = 1;
@@ -792,7 +798,7 @@ char** parseBlock(char* c,int* type)
 	  
         }
   //END OF SUBSHELL_COMMAND
- 
+  /*
   if(buffer_block[x]=='<' || buffer_block[x]=='>')
 	{
 	  
@@ -822,12 +828,15 @@ char** parseBlock(char* c,int* type)
 		  for(index=0;index<tempSize;index++)
 		  {
 		     commands[1][index] = temp[index];
-		  }		  
+		  }
+		  printf("A: "); printf(commands[0]); printf("\n");
+		    printf("B: "); printf(commands[1]);printf("\n");
+		     printf("C: "); printf(commands[2]);printf("\n");
 		  return commands;
 	  break;
 	  
 	  
-        }
+	  }*/
   //END OF SEQUENCE COMMAND
   if(buffer_block[x]=='|')
 	{
@@ -870,8 +879,8 @@ char** parseBlock(char* c,int* type)
   //END OF PIPE COMMAND
       x++;
     }
-  
-   if(isSimpleCommand(c))
+  printf("over here\n");
+   if(isSimpleCommand(c) || c[0]==':')
 	{
 	  *type = SIMPLE_COMMAND;
 	  int index = 0;
@@ -888,22 +897,147 @@ char** parseBlock(char* c,int* type)
   return commands;
   
 }
-
+char** strArray;
 void treeMaker(char* block, int* type, command_t c)
 {
-  
-  c->type = *type;
-  printf("in here\n");
-  if(*type == SIMPLE_COMMAND)
+  if(block==0 || block[0]==0 || block=="\n")
     {
-      strcpy(c->u.word,block);
       return;
     }
-  char** strArray = parseBlock(block,type);
-  treeMaker(strArray[0],type, c->u.command[0]);
-  treeMaker(strArray[1],type,c->u.command[1]);
-  treeMaker(strArray[2],type,c->u.command[2]);
+  printf("Block is: ");printf(block);printf("\n");
+  int t = *type;
+  strArray = parseBlock(block,type);
 
+  c->type = *type;
+
+  if(*type == SIMPLE_COMMAND)
+    {
+      printf("Simple Command: ");
+      
+      c->u.word = malloc(sizeof(char*));
+
+
+      c->u.word[0] = malloc(sizeof(char));
+      int i = 1;
+      while(block[i]!='\0')
+	{
+	  c->u.word[0] = realloc(c->u.word[0], i*sizeof(char));
+	  i++;
+	}
+      strcpy(c->u.word[0],block);
+      printf(c->u.word[0]);
+      printf("\n");
+      printf("\n");
+      char** w = c->u.word;
+      *++w = NULL;
+          commands[0] = NULL;  
+    commands[1] = NULL; 
+    commands[2] = NULL;  
+      return;
+    }
+  else if(*type == SIMPLE_COMMAND && block==NULL)
+    {
+      printf("Something went wrong...\n");
+      syntax_error();
+      return;
+    }
+  int i = 1;
+  char* one;
+  char* two;
+  char* three;
+  one=malloc(sizeof(char));
+  two=malloc(sizeof(char));
+  three=malloc(sizeof(char));
+  if(strArray[0]!=NULL)
+    {
+  while(strArray[0][i]!='\0')
+    {
+      one = realloc(one,i*sizeof(char));
+      i++;
+    }
+  strcpy(one,strArray[0]);
+    }
+
+ if(strArray[1]!=NULL)
+    {
+  i=1;
+  while(strArray[1][i]!='\0')
+    {
+      two = realloc(two,i*sizeof(char));
+      i++;
+    }
+  i=1;
+  strcpy(two,strArray[1]);
+    }
+
+
+ if(strArray[2]!=NULL)
+    {
+  while(strArray[2][i]!='\0')
+    {
+      three = realloc(three,i*sizeof(char));
+      i++;
+    }
+  strcpy(three,strArray[2]);
+    }
+   //reset the commands
+    commands[0] = NULL;  
+    commands[1] = NULL; 
+    commands[2] = NULL;     
+      printf("Type: ");
+      printf("%i",*type);
+      printf("\n");
+  printf("Block1: ");
+  printf(one);
+  printf("\n");
+ printf("Block2: ");
+  printf(two);
+  printf("\n");
+printf("Block3: ");
+  printf(three);
+  printf("\n");
+ printf("\n");
+ /*
+ ;*/
+ if(one!=NULL)
+   {
+  c->u.command[0] = malloc(sizeof(struct command));
+  treeMaker(one,type, c->u.command[0]);
+   }
+ else
+   {
+     /*c->u.command[0] = malloc(sizeof(struct command));
+     c->u.command[0]->type = SIMPLE_COMMAND;
+     c->u.command[0]->u.word = malloc(sizeof(char*));
+     *(c->u.command[0]->u.word) == NULL;*/
+   }
+
+ if(two!=NULL)
+   {
+  c->u.command[1] = malloc(sizeof(struct command));
+  treeMaker(two,type, c->u.command[1]);
+   }
+ else
+   {
+     /*c->u.command[1] = malloc(sizeof(struct command));
+     c->u.command[1]->type = SIMPLE_COMMAND;
+     c->u.command[1]->u.word = malloc(sizeof(char*));
+     *(c->u.command[1]->u.word) == NULL;*/
+   }
+
+ if(three!=NULL)
+   {
+  c->u.command[2] = malloc(sizeof(struct command));
+  treeMaker(three,type, c->u.command[2]);
+   }
+  else
+   {
+     /* c->u.command[2] = malloc(sizeof(struct command));
+     c->u.command[2]->type = SIMPLE_COMMAND;
+     c->u.command[2]->u.word = malloc(sizeof(char*));
+     *(c->u.command[2]->u.word) == NULL;*/
+   }
+  
 }
 
 command_stream_t
@@ -913,7 +1047,10 @@ make_command_stream (int (*get_next_byte) (void *),
   command_stream_t stream = checked_malloc(sizeof(struct command_stream));
   stream->commands = checked_malloc(sizeof(struct command_node));
   command_node_t current = stream->commands;
-
+  printf("%i",stream->commands);
+  printf("\n");
+  printf("%i",current);
+  printf("\n");
   int current_byte;
   char* buffer = (char*)checked_malloc(sizeof(char));
   char current_char;
@@ -933,6 +1070,7 @@ make_command_stream (int (*get_next_byte) (void *),
   int type = 0;
   char** commands;
   char* test;
+  
   while(1) 
   {
     
@@ -953,39 +1091,24 @@ make_command_stream (int (*get_next_byte) (void *),
     printf("\n");
     printf("\n");
     parseBlock(test,&type);
-    //Parse the block and store the values
+
+    current->command = malloc(sizeof(struct command));
     treeMaker(test,&type,current->command);
-    // command_t test = current->command;
-    current->next = checked_malloc(sizeof(struct command_node));
+    
     current = current->next;
-
-    
-    /*printf("Commands 0: ");
-    printf(commands[0]);
-    printf("\n");
-    printf("Commands 1: ");
-    printf(commands[1]);
-    printf("\n");
-    printf("Commands 2: ");
-    printf(commands[2]);
-    printf("\n");*/
-
-    
-    
-    //reset the commands
-    //commands[0] = NULL;  
-    //commands[1] = NULL; 
-    //commands[2] = NULL; 
+    current = checked_malloc(sizeof(struct command_node));
     free(test);
     } 
-  
 
-   return 0;
+   return stream;
 }
 
 command_t
 read_command_stream (command_stream_t s)
 {
-  return NULL;
+  command_node_t t = s->commands;
+  command_t com = t->command;
+  //printf("%i",com->type);
+  return com;
 }
 
