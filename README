@@ -1,4 +1,4 @@
-This is a skeleton for CS 111 Lab 1.
+Joey Gomez-Benito UID: 904140064
+Patrick Jackson UID: 504184347
 
-Replace this README file with notes on your implementation.
-Mentions any special features or limitations.
+In our implementation, we first break up the command stream into "blocks" where each block ends in the command stream with a double new line. From here, we implemented a function called parseBlock where we parse through each block breaking up the command block into smaller commands taking note of IF, WHILE, UNTIL, PIPE,SEQUENCE, SUBSHELL, and SIMPLE commands. This function works in breaking up the commands for many but not all of the possible cases. From there we tried to write a recursive function called makeTree to fill in the tree that the provided print function accesses; however, it doesn't load the tree correctly and therefore our implementation doesn't print correctly.
